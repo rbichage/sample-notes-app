@@ -21,7 +21,7 @@ import java.util.logging.Logger
 
 class EditNoteFragment : BaseFragment() {
 
-    private var note: Note ?= null
+    private var note: Note? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,30 +51,29 @@ class EditNoteFragment : BaseFragment() {
             }
 
 
-
         }
 
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
-        inflater?.inflate(R.menu.note_details_menu, menu)
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.note_details_menu, menu)
 
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
-        when(item?.itemId){
-            R.id.menu_settings ->{
+        when (item.itemId) {
+            R.id.menu_settings -> {
                 Toast.makeText(context, "Settings", Toast.LENGTH_SHORT).show()
             }
 
-            R.id.menu_save ->{
+            R.id.menu_save -> {
 
-                hideSoftKeyboard(activity!!, view!!)
+                hideSoftKeyboard(requireActivity(), requireView())
 
                 val noteTitle: String = note_title.text.toString().trim()
 
-                if (noteTitle.isEmpty()){
+                if (noteTitle.isEmpty()) {
                     note_title.error = "This is required"
                     note_title.requestFocus()
                     return false
@@ -82,81 +81,80 @@ class EditNoteFragment : BaseFragment() {
 
                 val noteContent: String = note_content.text.toString().trim()
 
-                if (noteContent.isEmpty()){
+                if (noteContent.isEmpty()) {
                     note_content.error = "This is required"
                     note_content.requestFocus()
                     return false
                 }
 
 
-                        launch {
-                            val updatedNote = Note(noteTitle,
-                                noteContent,
-                                getCurrenDate(),
-                                false,
-                                System.currentTimeMillis())
+                launch {
+                    val updatedNote = Note(
+                        noteTitle,
+                        noteContent,
+                        getCurrenDate(),
+                        false,
+                        System.currentTimeMillis()
+                    )
 
 
-                            context?.let {
+                    context?.let {
 
-                                if (note == null) {
-                                    NotesDatabase.invoke(it)
-                                        .notesDao()
-                                        .newNote(updatedNote)
-                                    it.toast("Note saved")
-                                }
-
-                                else{
-                                    updatedNote.id = note!!.id
-                                    NotesDatabase.invoke(it).notesDao().updateNote(updatedNote)
-                                    it.toast("Note updated")
-                                }
-
-                                val action = EditNoteFragmentDirections.actionEditNoteFragment2ToAddNewNote()
-                                Navigation.findNavController(view!!).navigate(action)
-                            }
+                        if (note == null) {
+                            NotesDatabase.invoke(it)
+                                .notesDao()
+                                .newNote(updatedNote)
+                            it.toast("Note saved")
+                        } else {
+                            updatedNote.id = note!!.id
+                            NotesDatabase.invoke(it).notesDao().updateNote(updatedNote)
+                            it.toast("Note updated")
                         }
+
+                        val action =
+                            EditNoteFragmentDirections.actionEditNoteFragment2ToAddNewNote()
+                        Navigation.findNavController(requireView()).navigate(action)
+                    }
+                }
             }
 
             R.id.menu_delete -> run {
-                hideSoftKeyboard(activity!!, view!!)
+                hideSoftKeyboard(requireActivity(), requireView())
 
-                if (note == null){
+                if (note == null) {
                     context?.toast("Cannot delete empty note")
-                }
-
-                else
-                note?.let { deleteNote(it) }
+                } else
+                    note?.let { deleteNote(it) }
 
             }
         }
 
         return super.onOptionsItemSelected(item)
-
     }
 
+
     private fun deleteNote(note: Note) {
-
-
-        AlertDialog.Builder(context!!).apply {
+        
+        AlertDialog.Builder(requireContext()).apply {
             setMessage("Delete note?")
-            setPositiveButton("YES"){ dialogInterface, i ->
+            setPositiveButton("YES") { dialogInterface, i ->
                 run {
                     launch {
-                        NotesDatabase.invoke(context!!)
+                        NotesDatabase.invoke(requireContext())
                             .notesDao()
                             .delete(note)
                         dialogInterface.dismiss()
-                        context!!.toast("deleted")
+                        requireContext().toast("deleted")
 
-                        val action = EditNoteFragmentDirections.actionEditNoteFragment2ToAddNewNote()
-                        Navigation.findNavController(view!!).navigate(action)
+                        val action =
+                            EditNoteFragmentDirections.actionEditNoteFragment2ToAddNewNote()
+                        Navigation.findNavController(requireView()).navigate(action)
 
                     }
                 }
             }
 
-            setNegativeButton("NO"){dialogInterface, i ->
+            setNegativeButton("NO") { dialogInterface, i ->
                 dialogInterface.dismiss()
 
             }

@@ -30,7 +30,6 @@ class NotesListAdapter(private val notes: List<Note>, val context: Context) :
             Navigation.findNavController(it).navigate(action)
         }
 
-
     }
 
     override fun getItemCount() = notes.size
