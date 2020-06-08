@@ -134,7 +134,7 @@ class EditNoteFragment : BaseFragment() {
 
 
     private fun deleteNote(note: Note) {
-        
+
         AlertDialog.Builder(requireContext()).apply {
             setMessage("Delete note?")
             setPositiveButton("YES") { dialogInterface, i ->
