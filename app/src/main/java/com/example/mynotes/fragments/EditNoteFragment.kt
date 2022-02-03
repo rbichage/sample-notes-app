@@ -6,22 +6,28 @@ import android.view.*
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import com.example.mynotes.R
-import com.example.mynotes.db.NotesDatabase
+import com.example.mynotes.interfaces.NotesDao
 import com.example.mynotes.models.Note
 import com.example.mynotes.utils.getCurrenDate
 import com.example.mynotes.utils.hideSoftKeyboard
 import com.example.mynotes.utils.toast
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_edit_note.*
 import kotlinx.android.synthetic.main.note_item.note_title
-import kotlinx.coroutines.launch
-import java.util.logging.Logger
+import javax.inject.Inject
 
 
-class EditNoteFragment : BaseFragment() {
+@AndroidEntryPoint
+class EditNoteFragment : Fragment() {
 
     private var note: Note? = null
+
+    @Inject
+    lateinit var notesDao: NotesDao
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,7 +51,6 @@ class EditNoteFragment : BaseFragment() {
             arguments?.let {
                 note = EditNoteFragmentArgs.fromBundle(it).note
 
-                Logger.getLogger("note_title").warning(note?.text)
                 note_title.text = note?.tilte
                 note_content.setText(note?.text)
             }
@@ -88,7 +93,7 @@ class EditNoteFragment : BaseFragment() {
                 }
 
 
-                launch {
+                lifecycleScope.launchWhenStarted {
                     val updatedNote = Note(
                         noteTitle,
                         noteContent,
@@ -101,13 +106,12 @@ class EditNoteFragment : BaseFragment() {
                     context?.let {
 
                         if (note == null) {
-                            NotesDatabase.invoke(it)
-                                .notesDao()
+                            notesDao
                                 .newNote(updatedNote)
                             it.toast("Note saved")
                         } else {
                             updatedNote.id = note!!.id
-                            NotesDatabase.invoke(it).notesDao().updateNote(updatedNote)
+                            notesDao.updateNote(updatedNote)
                             it.toast("Note updated")
                         }
 
@@ -139,10 +143,8 @@ class EditNoteFragment : BaseFragment() {
             setMessage("Delete note?")
             setPositiveButton("YES") { dialogInterface, i ->
                 run {
-                    launch {
-                        NotesDatabase.invoke(requireContext())
-                            .notesDao()
-                            .delete(note)
+                    lifecycleScope.launchWhenStarted {
+                        notesDao.delete(note)
                         dialogInterface.dismiss()
                         requireContext().toast("deleted")
 

@@ -5,23 +5,31 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.example.mynotes.R
 import com.example.mynotes.adapters.NotesListAdapter
 import com.example.mynotes.db.NotesDatabase
+import com.example.mynotes.interfaces.NotesDao
 import com.example.mynotes.models.Note
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.fragment_notes_list.*
 import kotlinx.android.synthetic.main.fragment_notes_list.view.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
-class NotesListFragment : BaseFragment() {
+@AndroidEntryPoint
+class NotesListFragment : Fragment() {
 
     lateinit var recyclerView: RecyclerView
     var notesList : List<Note> = ArrayList()
     lateinit var tvNoNotes: TextView
+
+    @Inject lateinit var notesDao: NotesDao
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,11 +48,9 @@ class NotesListFragment : BaseFragment() {
         recyclerView = view.notes_recycler
         tvNoNotes = view.tv_no_notes
 
-        launch {
+        lifecycleScope.launchWhenStarted {
             context?.let {
-                notesList = NotesDatabase.invoke(it)
-                    .notesDao()
-                    .getAllNotes()
+                notesList = notesDao.getAllNotes()
 
                 recyclerView.adapter = NotesListAdapter(notesList, it)
                 recyclerView.layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
